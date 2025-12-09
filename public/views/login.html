@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - SAEP Estoque</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <div class="container" style="max-width: 400px; margin-top: 100px;">
+        <h2>🔐 Acesso ao Sistema</h2>
+        <div id="message" class="alert" style="display: none;"></div>
+        
+        <form id="loginForm">
+            <label for="login">Usuário (Login):</label>
+            <input type="text" id="login" name="login" required>
+            
+            <label for="senha">Senha:</label>
+            <input type="password" id="senha" name="senha" required>
+            
+            <button type="submit">Entrar</button>
+        </form>
+    </div>
+
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const login = document.getElementById('login').value;
+            const senha = document.getElementById('senha').value;
+            const messageDiv = document.getElementById('message');
+
+            messageDiv.style.display = 'none';
+            messageDiv.classList.remove('alert-error', 'alert-success');
+
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ login, senha })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    // Login bem-sucedido
+                    messageDiv.classList.add('alert-success');
+                    messageDiv.textContent = data.message + ' Redirecionando...';
+                    messageDiv.style.display = 'block';
+                    window.location.href = '/principal'; // Redireciona para a tela principal
+                } else {
+                    // RF4.1: Falha de autenticação
+                    messageDiv.classList.add('alert-error');
+                    messageDiv.textContent = data.message || 'Erro de autenticação desconhecido.';
+                    messageDiv.style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Erro de conexão:', error);
+                messageDiv.classList.add('alert-error');
+                messageDiv.textContent = 'Erro ao conectar com o servidor.';
+                messageDiv.style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html>

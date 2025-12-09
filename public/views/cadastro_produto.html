@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastro de Produto - SAEP Estoque</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <header>
+        <h1>Cadastro de Produto</h1>
+        <div>
+            <a href="/principal" style="color: white; margin-right: 15px;">
+                <button style="background-color: #17a2b8;">Voltar ao Principal</button>
+            </a>
+            <button class="logout-btn" onclick="logout()">Sair</button>
+        </div>
+    </header>
+
+    <div class="container">
+        <h2>Inserir/Editar Produto</h2>
+        <div id="form-message" class="alert" style="display: none;"></div>
+        
+        <form id="produtoForm">
+            <input type="hidden" id="id_produto_edit">
+
+            <label for="sku">SKU (Unidade de Controle de Estoque):</label>
+            <input type="text" id="sku" name="sku" required>
+
+            <label for="nome">Nome do Produto:</label>
+            <input type="text" id="nome" name="nome" required>
+
+            <label for="estoque_minimo">Estoque Mínimo:</label>
+            <input type="number" id="estoque_minimo" name="estoque_minimo" required min="0" value="0">
+
+            <label for="peso">Peso (kg):</label>
+            <input type="number" id="peso" name="peso" step="0.001">
+            
+            <label for="caracteristicas">Características/Materiais (Martelo, Chave de Fenda, etc.):</label>
+            <textarea id="caracteristicas" name="caracteristicas"></textarea>
+
+            <button type="submit" id="submitBtn">Cadastrar Produto</button>
+            <button type="button" id="cancelBtn" style="background-color: #6c757d; display: none;">Cancelar Edição</button>
+        </form>
+
+        <hr style="margin: 40px 0;">
+
+        <h2>Produtos Cadastrados</h2>
+        
+        <form id="searchForm" style="display: flex; gap: 10px; margin-bottom: 20px;">
+            <input type="text" id="searchTerm" placeholder="Buscar por Nome ou SKU..." style="width: 80%; margin-bottom: 0;">
+            <button type="submit" style="width: 20%; background-color: #17a2b8;">Buscar</button>
+        </form>
+
+        <table id="produtosTable">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>SKU</th>
+                    <th>Nome</th>
+                    <th>Estoque Mín.</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                </tbody>
+        </table>
+    </div>
+
+    <script src="../js/cadastro_produto.js"></script>
+    <script>
+        // Função de Logout (reutilizada do principal)
+        async function logout() {
+            try {
+                await fetch('/api/auth/logout', { method: 'POST' });
+                window.location.href = '/views/login.html';
+            } catch (error) {
+                console.error('Erro ao realizar logout:', error);
+            }
+        }
+    </script>
+</body>
+</html>
