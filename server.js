@@ -4,7 +4,7 @@ const session = require('express-session');
 const path = require('path');
 
 const app = express();
-const port = 3000;
+const port = 3030;
 
 // Importa os controladores (rotas)
 const authRoutes = require('./controllers/AuthController');

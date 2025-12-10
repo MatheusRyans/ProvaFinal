@@ -38,6 +38,7 @@ router.get('/', async (req, res) => {
 
 // Rota POST: Inserir Novo Produto (RF6.1.3)
 router.post('/', validateProduto, async (req, res) => {
+    // VARIÁVEIS DECLARADAS CORRETAMENTE NO ESCOPO DA FUNÇÃO
     const { sku, nome, descricao, peso, caracteristicas, estoque_minimo } = req.body;
     let connection;
 
@@ -52,18 +53,29 @@ router.post('/', validateProduto, async (req, res) => {
         await connection.beginTransaction();
 
         // 1. Inserir na tabela PRODUTO
+        // Tratamento do undefined para null, utilizando as variáveis
+        const valoresTratados = [
+            sku, 
+            nome,
+            descricao === undefined ? null : descricao,
+            peso === undefined ? null : peso,
+            caracteristicas === undefined ? null : caracteristicas,
+            // A validação inicial (validateProduto) garante que estoque_minimo não é undefined/null
+            estoque_minimo
+        ];
+
         const [result] = await connection.execute(
             'INSERT INTO PRODUTO (sku, nome, descricao, peso, caracteristicas, estoque_minimo) VALUES (?, ?, ?, ?, ?, ?)',
-            [sku, nome, descricao, peso, caracteristicas, estoque_minimo]
+            valoresTratados
         );
         const id_produto = result.insertId;
 
         // 2. Inicializar na tabela ESTOQUE (saldo_atual = 0)
         await connection.execute('INSERT INTO ESTOQUE (id_produto, saldo_atual) VALUES (?, 0)', [id_produto]);
-        
+
         await connection.commit();
         res.status(201).json({ success: true, message: 'Produto cadastrado com sucesso!', id: id_produto });
-        
+
     } catch (error) {
         if (connection) await connection.rollback();
         console.error('Erro ao cadastrar produto:', error);
@@ -77,6 +89,19 @@ router.post('/', validateProduto, async (req, res) => {
 router.put('/:id', validateProduto, async (req, res) => {
     const id = req.params.id;
     const { sku, nome, descricao, peso, caracteristicas, estoque_minimo } = req.body;
+    
+    // Tratamento de undefined para null também é recomendado para o PUT, 
+    // caso o cliente envie um JSON onde a descrição seja null, mas o corpo não
+    // contenha a variável explicitamente (o que tornaria undefined)
+    const valoresAtualizados = [
+        sku, 
+        nome,
+        descricao === undefined ? null : descricao,
+        peso === undefined ? null : peso,
+        caracteristicas === undefined ? null : caracteristicas,
+        estoque_minimo, // Já validado como obrigatório
+        id
+    ];
 
     try {
         // Verifica unicidade do SKU (excluindo o próprio produto)
@@ -84,10 +109,10 @@ router.put('/:id', validateProduto, async (req, res) => {
         if (existing.length > 0) {
             return res.status(409).json({ message: 'SKU já cadastrado por outro produto.' });
         }
-        
+
         const [result] = await db.execute(
             'UPDATE PRODUTO SET sku = ?, nome = ?, descricao = ?, peso = ?, caracteristicas = ?, estoque_minimo = ? WHERE id_produto = ?',
-            [sku, nome, descricao, peso, caracteristicas, estoque_minimo, id]
+            valoresAtualizados // Usando o array tratado
         );
 
         if (result.affectedRows === 0) {
@@ -111,10 +136,9 @@ router.delete('/:id', async (req, res) => {
         await connection.beginTransaction();
 
         // Deletar dependências (MOVIMENTACAO e ESTOQUE) antes de PRODUTO
-        // Isso é necessário se as FKS não estiverem configuradas com ON DELETE CASCADE
         await connection.execute('DELETE FROM MOVIMENTACAO WHERE id_produto = ?', [id]);
         await connection.execute('DELETE FROM ESTOQUE WHERE id_produto = ?', [id]);
-        
+
         const [result] = await connection.execute('DELETE FROM PRODUTO WHERE id_produto = ?', [id]);
 
         await connection.commit();
