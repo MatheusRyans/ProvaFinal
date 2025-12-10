@@ -38,7 +38,6 @@ router.get('/', async (req, res) => {
 
 // Rota POST: Inserir Novo Produto (RF6.1.3)
 router.post('/', validateProduto, async (req, res) => {
-    // VARIÁVEIS DECLARADAS CORRETAMENTE NO ESCOPO DA FUNÇÃO
     const { sku, nome, descricao, peso, caracteristicas, estoque_minimo } = req.body;
     let connection;
 
@@ -49,32 +48,18 @@ router.post('/', validateProduto, async (req, res) => {
             return res.status(409).json({ message: 'SKU já cadastrado.' });
         }
 
+
         connection = await db.getConnection();
         await connection.beginTransaction();
 
-        // 1. Inserir na tabela PRODUTO
-        // Tratamento do undefined para null, utilizando as variáveis
-        const valoresTratados = [
-            sku, 
-            nome,
-            descricao === undefined ? null : descricao,
-            peso === undefined ? null : peso,
-            caracteristicas === undefined ? null : caracteristicas,
-            // A validação inicial (validateProduto) garante que estoque_minimo não é undefined/null
-            estoque_minimo
-        ];
-
+        // 1. Inserir na tabela PRODUTO (agora com saldo_atual = 0 por default)
         const [result] = await connection.execute(
             'INSERT INTO PRODUTO (sku, nome, descricao, peso, caracteristicas, estoque_minimo) VALUES (?, ?, ?, ?, ?, ?)',
-            valoresTratados
+            [sku, nome, descricao, peso, caracteristicas, estoque_minimo]
         );
-        const id_produto = result.insertId;
-
-        // 2. Inicializar na tabela ESTOQUE (saldo_atual = 0)
-        await connection.execute('INSERT INTO ESTOQUE (id_produto, saldo_atual) VALUES (?, 0)', [id_produto]);
 
         await connection.commit();
-        res.status(201).json({ success: true, message: 'Produto cadastrado com sucesso!', id: id_produto });
+        res.status(201).json({ success: true, message: 'Produto cadastrado com sucesso!', id: result.insertId });
 
     } catch (error) {
         if (connection) await connection.rollback();
@@ -89,12 +74,12 @@ router.post('/', validateProduto, async (req, res) => {
 router.put('/:id', validateProduto, async (req, res) => {
     const id = req.params.id;
     const { sku, nome, descricao, peso, caracteristicas, estoque_minimo } = req.body;
-    
+
     // Tratamento de undefined para null também é recomendado para o PUT, 
     // caso o cliente envie um JSON onde a descrição seja null, mas o corpo não
     // contenha a variável explicitamente (o que tornaria undefined)
     const valoresAtualizados = [
-        sku, 
+        sku,
         nome,
         descricao === undefined ? null : descricao,
         peso === undefined ? null : peso,

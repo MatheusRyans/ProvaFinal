@@ -11,30 +11,22 @@ CREATE TABLE USUARIO (
     cargo VARCHAR(50)
 );
 
--- 2. Tabela PRODUTO (Cadastro e Especificidades)
+-- 2. Tabela PRODUTO (Cadastro, Especificidades e SALDO)
 CREATE TABLE PRODUTO (
     id_produto INT AUTO_INCREMENT PRIMARY KEY,
-    sku VARCHAR(20) UNIQUE NOT NULL, -- Stock Keeping Unit
+    sku VARCHAR(20) UNIQUE NOT NULL, 
     nome VARCHAR(150) NOT NULL,
     descricao TEXT,
-    peso DECIMAL(10, 3), -- Peso em Kg
-    caracteristicas TEXT, -- Ex: "cabo emborrachado", "ponta imantada"
-    estoque_minimo INT NOT NULL
+    peso DECIMAL(10, 3), 
+    caracteristicas TEXT, 
+    estoque_minimo INT NOT NULL,
+    saldo_atual INT NOT NULL DEFAULT 0 -- NOVO CAMPO AQUI!
 );
 
--- 3. Tabela ESTOQUE (Saldo Atual)
-CREATE TABLE ESTOQUE (
-    id_estoque INT AUTO_INCREMENT PRIMARY KEY,
-    id_produto INT UNIQUE NOT NULL, -- 1:1 com PRODUTO
-    saldo_atual INT NOT NULL DEFAULT 0,
-    FOREIGN KEY (id_produto) REFERENCES PRODUTO(id_produto)
-);
-
--- 4. Tabela MOVIMENTACAO (Histórico e Rastreabilidade)
 CREATE TABLE MOVIMENTACAO (
     id_movimentacao INT AUTO_INCREMENT PRIMARY KEY,
     id_produto INT NOT NULL,
-    id_usuario INT NOT NULL, -- Responsável pela operação
+    id_usuario INT NOT NULL, 
     tipo_movimentacao ENUM('Entrada', 'Saída') NOT NULL,
     quantidade INT NOT NULL,
     data_hora DATETIME NOT NULL,
@@ -50,16 +42,10 @@ INSERT INTO USUARIO (nome, login, senha, cargo) VALUES
 ('Carlos Lima', 'carlos.sup', 'senha789', 'Supervisor de Produção');
 
 -- 2. PRODUTO
-INSERT INTO PRODUTO (sku, nome, descricao, peso, caracteristicas, estoque_minimo) VALUES
-('MTL-C-01', 'Martelo de Bola 500g', 'Cabeça de aço forjado, cabo de fibra de vidro', 0.500, 'Alta resistência a impacto', 10),
-('CHV-F-PH2', 'Chave de Fenda Phillips PH2', 'Ponta imantada, haste de cromo vanádio, revestimento isolante', 0.150, 'Isolamento 1000V, ponta imantada', 25),
-('GRF-AJ-10', 'Grifo Ajustável 10 polegadas', 'Aço carbono, mordente temperado', 0.850, 'Abertura máxima de 30mm', 8);
-
--- 3. ESTOQUE (Inicializando Saldo Atual)
-INSERT INTO ESTOQUE (id_produto, saldo_atual) VALUES
-(1, 12), -- Martelo de Bola (acima do min 10)
-(2, 30), -- Chave de Fenda (acima do min 25)
-(3, 5);  -- Grifo Ajustável (abaixo do min 8 - ideal para testar alerta)
+INSERT INTO PRODUTO (sku, nome, descricao, peso, caracteristicas, estoque_minimo, saldo_atual) VALUES
+('MTL-C-01', 'Martelo de Bola 500g', 'Cabeça de aço forjado, cabo de fibra de vidro', 0.500, 'Alta resistência a impacto', 10, 12),
+('CHV-F-PH2', 'Chave de Fenda Phillips PH2', 'Ponta imantada, haste de cromo vanádio, revestimento isolante', 0.150, 'Isolamento 1000V, ponta imantada', 25, 30),
+('GRF-AJ-10', 'Grifo Ajustável 10 polegadas', 'Aço carbono, mordente temperado', 0.850, 'Abertura máxima de 30mm', 8, 5); 
 
 -- 4. MOVIMENTACAO (Entradas e Saídas iniciais)
 INSERT INTO MOVIMENTACAO (id_produto, id_usuario, tipo_movimentacao, quantidade, data_hora, observacao) VALUES

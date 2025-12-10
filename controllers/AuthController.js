@@ -1,7 +1,6 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../models/db');
-const bcrypt = require('bcryptjs'); // Usado para simular o hash de senha
 
 // Rota POST para autenticação (Login)
 router.post('/login', async (req, res) => {

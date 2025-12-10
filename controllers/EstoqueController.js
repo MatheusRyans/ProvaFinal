@@ -4,25 +4,19 @@ const db = require('../models/db');
 
 // Rota GET: Listar Estoque (RF7.1.1 - Ordenação)
 router.get('/', async (req, res) => {
-    // RF7.1.1: Listar produtos em ordem alfabética
+    // A consulta agora pega o saldo diretamente da tabela PRODUTO
     const query = `
         SELECT 
-            p.id_produto, p.sku, p.nome, p.estoque_minimo, e.saldo_atual
-        FROM PRODUTO p
-        JOIN ESTOQUE e ON p.id_produto = e.id_produto
-        ORDER BY p.nome ASC
+            id_produto, sku, nome, estoque_minimo, saldo_atual 
+        FROM PRODUTO
+        ORDER BY nome ASC
     `;
 
     try {
         const [rows] = await db.execute(query);
-        // Implementação do algoritmo de ordenação (ex: Bubble Sort)
-        // O MySQL já ordenou com ORDER BY, mas se fosse necessário no Node:
-        // const sortedRows = bubbleSort(rows); 
-        // return res.json(sortedRows);
-        
         res.json(rows);
     } catch (error) {
-        console.error('Erro ao listar estoque:', error);
+        console.error('Erro ao listar estoque (simplificado):', error);
         res.status(500).json({ message: 'Erro interno do servidor ao buscar estoque.' });
     }
 });
@@ -32,7 +26,7 @@ router.get('/', async (req, res) => {
 router.post('/movimentar', async (req, res) => {
     const { id_produto, tipo_movimentacao, quantidade, data } = req.body;
     const id_usuario = req.session.userId; // Responsável (RF07.2)
-    
+
     if (!id_produto || !tipo_movimentacao || !quantidade || !id_usuario) {
         return res.status(400).json({ message: 'Dados incompletos para movimentação.' });
     }
@@ -41,6 +35,7 @@ router.post('/movimentar', async (req, res) => {
         return res.status(400).json({ message: 'Quantidade deve ser maior que zero.' });
     }
 
+
     let connection;
     let alertaEstoqueMinimo = false;
 
@@ -48,40 +43,53 @@ router.post('/movimentar', async (req, res) => {
         connection = await db.getConnection();
         await connection.beginTransaction();
 
-        // 1. Atualizar o saldo do estoque
-        const operacao = tipo_movimentacao === 'Entrada' ? '+' : '-';
-        
-        await connection.execute(
-            `UPDATE ESTOQUE SET saldo_atual = saldo_atual ${operacao} ? WHERE id_produto = ?`,
-            [quantidade, id_produto]
+        // 1. Obter Saldo Atual e Estoque Mínimo ANTES da atualização
+        const [produtoInfo] = await connection.execute(
+            'SELECT saldo_atual, estoque_minimo FROM PRODUTO WHERE id_produto = ? FOR UPDATE', // FOR UPDATE bloqueia a linha
+            [id_produto]
         );
 
-        // 2. Inserir na MOVIMENTACAO (Histórico)
+        if (produtoInfo.length === 0) {
+            await connection.rollback();
+            return res.status(404).json({ message: 'Produto não encontrado.' });
+        }
+
+        const { saldo_atual, estoque_minimo } = produtoInfo[0];
+        let novo_saldo;
+
+        // 2. Calcular e Validar o Novo Saldo
+        if (tipo_movimentacao === 'Entrada') {
+            novo_saldo = saldo_atual + quantidade;
+        } else {
+            novo_saldo = saldo_atual - quantidade;
+            if (novo_saldo < 0) {
+                await connection.rollback();
+                return res.status(400).json({ message: 'Não há estoque suficiente para esta saída. Saldo atual: ' + saldo_atual });
+            }
+        }
+
+        // 3. Atualizar o saldo na tabela PRODUTO
+        await connection.execute(
+            'UPDATE PRODUTO SET saldo_atual = ? WHERE id_produto = ?',
+            [novo_saldo, id_produto]
+        );
+
+        // 4. Inserir na MOVIMENTACAO (Histórico)
         await connection.execute(
             'INSERT INTO MOVIMENTACAO (id_produto, id_usuario, tipo_movimentacao, quantidade, data_hora) VALUES (?, ?, ?, ?, ?)',
             [id_produto, id_usuario, tipo_movimentacao, quantidade, data || new Date()]
         );
-        
-        // 3. Verificar Estoque Mínimo (RF7.1.4 - Apenas para Saída)
-        if (tipo_movimentacao === 'Saída') {
-            const [rows] = await connection.execute(
-                'SELECT e.saldo_atual, p.estoque_minimo FROM ESTOQUE e JOIN PRODUTO p ON e.id_produto = p.id_produto WHERE e.id_produto = ?',
-                [id_produto]
-            );
-            
-            if (rows.length > 0) {
-                const { saldo_atual, estoque_minimo } = rows[0];
-                if (saldo_atual < estoque_minimo) {
-                    alertaEstoqueMinimo = true;
-                }
-            }
+
+        // 5. Verificar Estoque Mínimo (RF7.1.4 - Apenas para Saída)
+        if (tipo_movimentacao === 'Saída' && novo_saldo < estoque_minimo) {
+            alertaEstoqueMinimo = true;
         }
 
         await connection.commit();
-        res.json({ 
-            success: true, 
-            message: 'Movimentação registrada com sucesso.',
-            alerta_estoque_minimo: alertaEstoqueMinimo 
+        res.json({
+            success: true,
+            message: 'Movimentação registrada com sucesso. Novo saldo: ' + novo_saldo,
+            alerta_estoque_minimo: alertaEstoqueMinimo
         });
 
     } catch (error) {
@@ -89,9 +97,10 @@ router.post('/movimentar', async (req, res) => {
         console.error('Erro ao registrar movimentação:', error);
         // Pode ocorrer erro de saldo negativo se não houver validação no front ou cláusula no DB
         if (error.code === 'ER_CHECK_CONSTRAINT_VIOLATED') {
-             return res.status(400).json({ message: 'Não há estoque suficiente para esta saída.' });
+            return res.status(400).json({ message: 'Não há estoque suficiente para esta saída.' });
         }
         res.status(500).json({ message: 'Erro interno do servidor ao registrar movimentação.' });
+
     } finally {
         if (connection) connection.release();
     }
