@@ -1,0 +1,71 @@
+-- Criação do Banco de Dados
+CREATE DATABASE IF NOT EXISTS saep_db;
+USE saep_db;
+
+-- 1. Tabela USUARIO (Responsável)
+CREATE TABLE USUARIO (
+    id_usuario INT AUTO_INCREMENT PRIMARY KEY,
+    nome VARCHAR(100) NOT NULL,
+    login VARCHAR(50) UNIQUE NOT NULL,
+    senha VARCHAR(255) NOT NULL,
+    cargo VARCHAR(50)
+);
+
+-- 2. Tabela PRODUTO (Cadastro e Especificidades)
+CREATE TABLE PRODUTO (
+    id_produto INT AUTO_INCREMENT PRIMARY KEY,
+    sku VARCHAR(20) UNIQUE NOT NULL, -- Stock Keeping Unit
+    nome VARCHAR(150) NOT NULL,
+    descricao TEXT,
+    peso DECIMAL(10, 3), -- Peso em Kg
+    caracteristicas TEXT, -- Ex: "cabo emborrachado", "ponta imantada"
+    estoque_minimo INT NOT NULL
+);
+
+-- 3. Tabela ESTOQUE (Saldo Atual)
+CREATE TABLE ESTOQUE (
+    id_estoque INT AUTO_INCREMENT PRIMARY KEY,
+    id_produto INT UNIQUE NOT NULL, -- 1:1 com PRODUTO
+    saldo_atual INT NOT NULL DEFAULT 0,
+    FOREIGN KEY (id_produto) REFERENCES PRODUTO(id_produto)
+);
+
+-- 4. Tabela MOVIMENTACAO (Histórico e Rastreabilidade)
+CREATE TABLE MOVIMENTACAO (
+    id_movimentacao INT AUTO_INCREMENT PRIMARY KEY,
+    id_produto INT NOT NULL,
+    id_usuario INT NOT NULL, -- Responsável pela operação
+    tipo_movimentacao ENUM('Entrada', 'Saída') NOT NULL,
+    quantidade INT NOT NULL,
+    data_hora DATETIME NOT NULL,
+    observacao VARCHAR(255),
+    FOREIGN KEY (id_produto) REFERENCES PRODUTO(id_produto),
+    FOREIGN KEY (id_usuario) REFERENCES USUARIO(id_usuario)
+);
+
+-- 1. USUARIO
+INSERT INTO USUARIO (nome, login, senha, cargo) VALUES
+('Ana Silva', 'ana.almox', 'senha123', 'Almoxarife Sênior'),
+('Bruno Costa', 'bruno.estoq', 'senha456', 'Assistente de Estoque'),
+('Carlos Lima', 'carlos.sup', 'senha789', 'Supervisor de Produção');
+
+-- 2. PRODUTO
+INSERT INTO PRODUTO (sku, nome, descricao, peso, caracteristicas, estoque_minimo) VALUES
+('MTL-C-01', 'Martelo de Bola 500g', 'Cabeça de aço forjado, cabo de fibra de vidro', 0.500, 'Alta resistência a impacto', 10),
+('CHV-F-PH2', 'Chave de Fenda Phillips PH2', 'Ponta imantada, haste de cromo vanádio, revestimento isolante', 0.150, 'Isolamento 1000V, ponta imantada', 25),
+('GRF-AJ-10', 'Grifo Ajustável 10 polegadas', 'Aço carbono, mordente temperado', 0.850, 'Abertura máxima de 30mm', 8);
+
+-- 3. ESTOQUE (Inicializando Saldo Atual)
+INSERT INTO ESTOQUE (id_produto, saldo_atual) VALUES
+(1, 12), -- Martelo de Bola (acima do min 10)
+(2, 30), -- Chave de Fenda (acima do min 25)
+(3, 5);  -- Grifo Ajustável (abaixo do min 8 - ideal para testar alerta)
+
+-- 4. MOVIMENTACAO (Entradas e Saídas iniciais)
+INSERT INTO MOVIMENTACAO (id_produto, id_usuario, tipo_movimentacao, quantidade, data_hora, observacao) VALUES
+(1, 1, 'Entrada', 12, NOW() - INTERVAL 5 DAY, 'Estoque inicial do Martelo'),
+(2, 2, 'Entrada', 30, NOW() - INTERVAL 4 DAY, 'Primeiro lote da Chave de Fenda'),
+(3, 3, 'Entrada', 10, NOW() - INTERVAL 3 DAY, 'Lote inicial do Grifo');
+
+INSERT INTO MOVIMENTACAO (id_produto, id_usuario, tipo_movimentacao, quantidade, data_hora, observacao) VALUES
+(3, 1, 'Saída', 5, NOW() - INTERVAL 1 DAY, 'Uso na linha de montagem A');
