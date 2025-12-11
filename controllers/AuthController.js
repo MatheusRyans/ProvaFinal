@@ -21,10 +21,8 @@ router.post('/login', async (req, res) => {
         const user = rows[0];
 
         // --- SIMULAÇÃO DE VERIFICAÇÃO DE SENHA ---
-        // Em um sistema real, você usaria bcrypt para comparar o hash:
-        // const match = await bcrypt.compare(senha, user.senha);
         
-        // Neste exemplo, faremos uma comparação simples, já que inserimos senhas claras no script SQL
+        //comparação simples
         const match = (senha === user.senha); 
         
         if (match) {

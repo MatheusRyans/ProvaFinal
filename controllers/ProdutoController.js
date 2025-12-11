@@ -52,7 +52,7 @@ router.post('/', validateProduto, async (req, res) => {
         connection = await db.getConnection();
         await connection.beginTransaction();
 
-        // 1. Inserir na tabela PRODUTO (agora com saldo_atual = 0 por default)
+        // 1. Inserir na tabela PRODUTO (com saldo_atual = 0 por default)
         const [result] = await connection.execute(
             'INSERT INTO PRODUTO (sku, nome, descricao, peso, caracteristicas, estoque_minimo) VALUES (?, ?, ?, ?, ?, ?)',
             [sku, nome, descricao, peso, caracteristicas, estoque_minimo]
@@ -75,9 +75,6 @@ router.put('/:id', validateProduto, async (req, res) => {
     const id = req.params.id;
     const { sku, nome, descricao, peso, caracteristicas, estoque_minimo } = req.body;
 
-    // Tratamento de undefined para null também é recomendado para o PUT, 
-    // caso o cliente envie um JSON onde a descrição seja null, mas o corpo não
-    // contenha a variável explicitamente (o que tornaria undefined)
     const valoresAtualizados = [
         sku,
         nome,
@@ -122,7 +119,7 @@ router.delete('/:id', async (req, res) => {
 
         // Deletar dependências (MOVIMENTACAO e ESTOQUE) antes de PRODUTO
         await connection.execute('DELETE FROM MOVIMENTACAO WHERE id_produto = ?', [id]);
-        await connection.execute('DELETE FROM ESTOQUE WHERE id_produto = ?', [id]);
+        await connection.execute('DELETE FROM PRODUTO WHERE id_produto = ?', [id]);
 
         const [result] = await connection.execute('DELETE FROM PRODUTO WHERE id_produto = ?', [id]);
 

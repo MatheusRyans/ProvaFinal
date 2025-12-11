@@ -7,7 +7,7 @@ router.get('/', async (req, res) => {
     // A consulta agora pega o saldo diretamente da tabela PRODUTO
     const query = `
         SELECT 
-            id_produto, sku, nome, estoque_minimo, saldo_atual 
+            * 
         FROM PRODUTO
         ORDER BY nome ASC
     `;

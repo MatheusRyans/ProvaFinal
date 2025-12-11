@@ -7,7 +7,7 @@ CREATE TABLE USUARIO (
     id_usuario INT AUTO_INCREMENT PRIMARY KEY,
     nome VARCHAR(100) NOT NULL,
     login VARCHAR(50) UNIQUE NOT NULL,
-    senha VARCHAR(255) NOT NULL,
+    senha VARCHAR(20) NOT NULL,
     cargo VARCHAR(50)
 );
 
@@ -15,12 +15,12 @@ CREATE TABLE USUARIO (
 CREATE TABLE PRODUTO (
     id_produto INT AUTO_INCREMENT PRIMARY KEY,
     sku VARCHAR(20) UNIQUE NOT NULL, 
-    nome VARCHAR(150) NOT NULL,
+    nome VARCHAR(50) NOT NULL,
     descricao TEXT,
     peso DECIMAL(10, 3), 
     caracteristicas TEXT, 
     estoque_minimo INT NOT NULL,
-    saldo_atual INT NOT NULL DEFAULT 0 -- NOVO CAMPO AQUI!
+    saldo_atual INT NOT NULL DEFAULT 0 
 );
 
 CREATE TABLE MOVIMENTACAO (
@@ -43,11 +43,11 @@ INSERT INTO USUARIO (nome, login, senha, cargo) VALUES
 
 -- 2. PRODUTO
 INSERT INTO PRODUTO (sku, nome, descricao, peso, caracteristicas, estoque_minimo, saldo_atual) VALUES
-('MTL-C-01', 'Martelo de Bola 500g', 'Cabeça de aço forjado, cabo de fibra de vidro', 0.500, 'Alta resistência a impacto', 10, 12),
-('CHV-F-PH2', 'Chave de Fenda Phillips PH2', 'Ponta imantada, haste de cromo vanádio, revestimento isolante', 0.150, 'Isolamento 1000V, ponta imantada', 25, 30),
-('GRF-AJ-10', 'Grifo Ajustável 10 polegadas', 'Aço carbono, mordente temperado', 0.850, 'Abertura máxima de 30mm', 8, 5); 
+('04170292', 'Martelo de Bola 500g', 'Cabeça de aço forjado, cabo de fibra de vidro', 0.500, 'Alta resistência a impacto', 10, 12),
+('04170437', 'Chave de Fenda Phillips PH2', 'Ponta imantada, haste de cromo vanádio, revestimento isolante', 0.150, 'Isolamento 1000V, ponta imantada', 25, 30),
+('04060036', 'Grifo Ajustável 10 polegadas', 'Aço carbono, mordente temperado', 0.850, 'Abertura máxima de 30mm', 8, 5); 
 
--- 4. MOVIMENTACAO (Entradas e Saídas iniciais)
+-- 3. MOVIMENTACAO (Entradas e Saídas iniciais)
 INSERT INTO MOVIMENTACAO (id_produto, id_usuario, tipo_movimentacao, quantidade, data_hora, observacao) VALUES
 (1, 1, 'Entrada', 12, NOW() - INTERVAL 5 DAY, 'Estoque inicial do Martelo'),
 (2, 2, 'Entrada', 30, NOW() - INTERVAL 4 DAY, 'Primeiro lote da Chave de Fenda'),
