@@ -35,23 +35,21 @@ CREATE TABLE MOVIMENTACAO (
     FOREIGN KEY (id_usuario) REFERENCES USUARIO(id_usuario)
 );
 
--- 1. USUARIO
+-- USUARIO
 INSERT INTO USUARIO (nome, login, senha, cargo) VALUES
 ('Ana Silva', 'ana.almox', 'senha123', 'Almoxarife Sênior'),
 ('Bruno Costa', 'bruno.estoq', 'senha456', 'Assistente de Estoque'),
 ('Carlos Lima', 'carlos.sup', 'senha789', 'Supervisor de Produção');
 
--- 2. PRODUTO
+-- PRODUTOS (Com saldo inicial)
 INSERT INTO PRODUTO (sku, nome, descricao, peso, caracteristicas, estoque_minimo, saldo_atual) VALUES
-('MTL-C-01', 'Martelo de Bola 500g', 'Cabeça de aço forjado, cabo de fibra de vidro', 0.500, 'Alta resistência a impacto', 10, 12),
-('CHV-F-PH2', 'Chave de Fenda Phillips PH2', 'Ponta imantada, haste de cromo vanádio, revestimento isolante', 0.150, 'Isolamento 1000V, ponta imantada', 25, 30),
-('GRF-AJ-10', 'Grifo Ajustável 10 polegadas', 'Aço carbono, mordente temperado', 0.850, 'Abertura máxima de 30mm', 8, 5); 
+('04071047', 'Martelo de Bola 500g', 'Cabeça de aço forjado, cabo de fibra de vidro', 0.500, 'Alta resistência a impacto', 10, 12),
+('04156231', 'Chave de Fenda Phillips PH2', 'Ponta imantada, haste de cromo vanádio, revestimento isolante', 0.150, 'Isolamento 1000V, ponta imantada', 25, 30),
+('04170345', 'Grifo Ajustável 10 polegadas', 'Aço carbono, mordente temperado', 0.850, 'Abertura máxima de 30mm', 8, 5); 
 
--- 4. MOVIMENTACAO (Entradas e Saídas iniciais)
+-- MOVIMENTACAO (Entradas e Saídas iniciais)
 INSERT INTO MOVIMENTACAO (id_produto, id_usuario, tipo_movimentacao, quantidade, data_hora, observacao) VALUES
 (1, 1, 'Entrada', 12, NOW() - INTERVAL 5 DAY, 'Estoque inicial do Martelo'),
 (2, 2, 'Entrada', 30, NOW() - INTERVAL 4 DAY, 'Primeiro lote da Chave de Fenda'),
 (3, 3, 'Entrada', 10, NOW() - INTERVAL 3 DAY, 'Lote inicial do Grifo');
 
-INSERT INTO MOVIMENTACAO (id_produto, id_usuario, tipo_movimentacao, quantidade, data_hora, observacao) VALUES
-(3, 1, 'Saída', 5, NOW() - INTERVAL 1 DAY, 'Uso na linha de montagem A');

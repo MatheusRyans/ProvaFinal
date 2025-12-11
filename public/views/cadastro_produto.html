@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestão de Estoque - SAEP Estoque</title>
+    <title>Cadastro e Gestão de Produtos - SAEP Estoque</title>
     <link rel="stylesheet" href="../css/style.css">
 </head>
 <body>
     <header>
-        <h1>Gestão de Estoque e Movimentação</h1>
+        <h1>Cadastro e Gestão de Produtos</h1>
         <div>
             <a href="/principal" style="color: white; margin-right: 15px;">
                 <button style="background-color: #17a2b8;">Voltar ao Principal</button>
@@ -19,22 +19,42 @@
 
     <div class="container">
         <div id="feedback-message" class="alert" style="display: none;"></div>
+
+        <h2>Formulário de Cadastro (RF6.1)</h2>
+        <form id="cadastroForm">
+            <input type="hidden" id="produtoId"> 
+
+            <label for="nome">Nome do Produto:</label>
+            <input type="text" id="nome" required>
+
+            <label for="sku">SKU (Código Único):</label>
+            <input type="text" id="sku" required>
+            
+            <label for="estoque_minimo">Estoque Mínimo (RF6.1.1):</label>
+            <input type="number" id="estoque_minimo" min="1" required>
+
+            <label for="peso">Peso (Kg - Opcional):</label>
+            <input type="number" id="peso" step="0.001" min="0">
+
+            <label for="descricao">Descrição:</label>
+            <textarea id="descricao" rows="2"></textarea>
+            
+            <label for="caracteristicas">Características/Observações:</label>
+            <textarea id="caracteristicas" rows="2"></textarea>
+
+            <button type="submit" id="submitBtn">Cadastrar Produto</button>
+            <button type="button" id="cancelEditBtn" style="background-color: #6c757d; display: none;">Cancelar Edição</button>
+        </form>
+
+        <h2 style="margin-top: 30px;">Produtos Cadastrados (RF6.1.2)</h2>
         
-        <div id="global-alert" class="alert alert-error" style="display: none; font-weight: bold;">
-            ⚠️ ATENÇÃO: Os seguintes produtos estão abaixo do estoque mínimo: <span id="low-stock-list"></span>
-        </div>
-
-        <h2>Status Atual do Estoque</h2>
-
-        <table id="estoqueTable">
+        <table id="produtosTable">
             <thead>
                 <tr>
                     <th>ID</th>
-                    <th>Nome do Produto</th>
                     <th>SKU</th>
+                    <th>Nome</th>
                     <th>Estoque Mín.</th>
-                    <th>Saldo Atual</th>
-                    <th>Status</th>
                     <th>Ações</th>
                 </tr>
             </thead>
@@ -43,37 +63,9 @@
         </table>
     </div>
 
-    <dialog id="movimentacaoModal" style="border: none; padding: 0; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.3);">
-        <div style="width: 400px; padding: 20px; background: white;">
-            <h3>Registrar Movimentação</h3>
-            <p>Produto: <span id="movimentacaoProdutoNome" style="font-weight: bold;"></span></p>
-            <div id="mov-message" class="alert" style="display: none;"></div>
-
-            <form id="movimentacaoForm">
-                <input type="hidden" id="movimentacaoIdProduto">
-
-                <label for="tipo_movimentacao">Tipo de Operação:</label>
-                <select id="tipo_movimentacao" required>
-                    <option value="">Selecione...</option>
-                    <option value="Entrada">Entrada (Recebimento)</option>
-                    <option value="Saída">Saída (Consumo/Venda)</option>
-                </select>
-
-                <label for="quantidade">Quantidade:</label>
-                <input type="number" id="quantidade" min="1" required>
-                
-                <label for="data">Data e Hora (Padrão atual):</label>
-                <input type="datetime-local" id="data" required>
-
-                <button type="submit">Confirmar Movimentação</button>
-                <button type="button" id="cancelModalBtn" style="background-color: #6c757d;">Cancelar</button> 
-            </form>
-        </div>
-    </dialog>
-
-    <script src="../js/gestao_estoque.js"></script>
+    <script src="../js/cadastro_produto.js"></script>
     <script>
-        // Função de Logout (reutilizada do principal)
+        // Função de Logout (reutilizada)
         async function logout() {
             try {
                 await fetch('/api/auth/logout', { method: 'POST' });
