@@ -1,6 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../models/db');
+const authenticate = require('../middleware/authenticate');
+
+router.use(authenticate);
 
 // Rota GET: Listar Estoque (RF7.1.1 - Ordenação)
 router.get('/', async (req, res) => {

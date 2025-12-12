@@ -35,13 +35,13 @@ CREATE TABLE MOVIMENTACAO (
     FOREIGN KEY (id_usuario) REFERENCES USUARIO(id_usuario)
 );
 
--- 1. USUARIO
+-- USUARIO
 INSERT INTO USUARIO (nome, login, senha, cargo) VALUES
 ('Ana Silva', 'ana.almox', 'senha123', 'Almoxarife Sênior'),
 ('Bruno Costa', 'bruno.estoq', 'senha456', 'Assistente de Estoque'),
 ('Carlos Lima', 'carlos.sup', 'senha789', 'Supervisor de Produção');
 
--- 2. PRODUTO
+-- PRODUTOS (Com saldo inicial)
 INSERT INTO PRODUTO (sku, nome, descricao, peso, caracteristicas, estoque_minimo, saldo_atual) VALUES
 ('04170292', 'Martelo de Bola 500g', 'Cabeça de aço forjado, cabo de fibra de vidro', 0.500, 'Alta resistência a impacto', 10, 12),
 ('04170437', 'Chave de Fenda Phillips PH2', 'Ponta imantada, haste de cromo vanádio, revestimento isolante', 0.150, 'Isolamento 1000V, ponta imantada', 25, 30),
@@ -53,5 +53,3 @@ INSERT INTO MOVIMENTACAO (id_produto, id_usuario, tipo_movimentacao, quantidade,
 (2, 2, 'Entrada', 30, NOW() - INTERVAL 4 DAY, 'Primeiro lote da Chave de Fenda'),
 (3, 3, 'Entrada', 10, NOW() - INTERVAL 3 DAY, 'Lote inicial do Grifo');
 
-INSERT INTO MOVIMENTACAO (id_produto, id_usuario, tipo_movimentacao, quantidade, data_hora, observacao) VALUES
-(3, 1, 'Saída', 5, NOW() - INTERVAL 1 DAY, 'Uso na linha de montagem A');
